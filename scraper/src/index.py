@@ -1,22 +1,21 @@
 """
 DocSearch scraper main entry point
 """
-import os
 import json
-import requests
-from requests_iap import IAPAuth
-from keycloak.realm import KeycloakRealm
+import os
 
+import requests
+from keycloak.realm import KeycloakRealm
+from requests_iap import IAPAuth
 from scrapy.crawler import CrawlerProcess
 
-from .typesense_helper import TypesenseHelper
+from .config.browser_handler import BrowserHandler
 from .config.config_loader import ConfigLoader
-from .documentation_spider import DocumentationSpider
-from .strategies.default_strategy import DefaultStrategy
 from .custom_downloader_middleware import CustomDownloaderMiddleware
 from .custom_dupefilter import CustomDupeFilter
-from .config.browser_handler import BrowserHandler
-from .strategies.algolia_settings import AlgoliaSettings
+from .documentation_spider import DocumentationSpider
+from .strategies.default_strategy import DefaultStrategy
+from .typesense_helper import TypesenseHelper
 
 try:
     # disable boto (S3 download)
@@ -53,8 +52,17 @@ def run_config(config):
         "Accept-Language": "en",
     }  # Defaults for scrapy https://docs.scrapy.org/en/latest/topics/settings.html#default-request-headers
 
+    # CL Login
+    if os.getenv('SSO_API_KEY_ID') and os.getenv('SSO_API_KEY_SECRET'):
+        response = requests.post(
+            url='https://login.causalens.com/api/authentication/verify-api-key',
+            json={'id': os.getenv('SSO_API_KEY_ID'), 'key': os.getenv('SSO_API_KEY_SECRET')},
+        )
+        token = response.json().get('id_token')
+        headers.update({"Authorization": 'Bearer ' + token})
+
     # Cloudflare Zero Trust (CF)
-    if (os.getenv("CF_ACCESS_CLIENT_ID") and 
+    if (os.getenv("CF_ACCESS_CLIENT_ID") and
         os.getenv("CF_ACCESS_CLIENT_SECRET")):
         headers.update(
             {
@@ -64,7 +72,7 @@ def run_config(config):
         )
 
     # Google Identity-Aware Proxy (IAP)
-    elif (os.getenv("IAP_AUTH_CLIENT_ID") and 
+    elif (os.getenv("IAP_AUTH_CLIENT_ID") and
         os.getenv("IAP_AUTH_SERVICE_ACCOUNT_JSON")):
         iap_token = IAPAuth(
             client_id=os.getenv("IAP_AUTH_CLIENT_ID"),

@@ -1,12 +1,29 @@
+# CL FORK
+
+This repo was forked for the following reasons:
+
+1. It did not support odic based authentication which is required to access our documentation, so this has been added in index.py
+2. It did not support a typesense instance running via https on port 443 directly so that has been addressed in the init method of the typesense helper
+3. It doc ranking function did not work that well for our documentation so it has been adjusted to work better for our docs. This is done in the `transform_record` function in the typesense helper class.
+
+To use the scraper we build it to a docker image and then run it as a post install job with the helm deployment on the wiki.
+
+```
+docker buildx build -f ./scraper/dev/docker/Dockerfile.base -t docsearch-scraper-base:0.0.2 .
+docker buildx build -f ./scraper/dev/docker/Dockerfile --build-arg SCRAPER_BASE_VERSION=0.0.2 -t docsearch-scraper:0.0.2 .
+docker tag docsearch-scraper:0.0.1 causalens.jfrog.io/docker-internal/docsearch-scraper:0.0.2
+docker push causalens.jfrog.io/docker-internal/docsearch-scraper:0.0.2
+```
+
 # Typesense DocSearch scraper
 
-This is a fork of Algolia's awesome [DocSearch Scraper](https://github.com/algolia/docsearch-scraper), customized to index data in [Typesense](https://typesense.org). 
+This is a fork of Algolia's awesome [DocSearch Scraper](https://github.com/algolia/docsearch-scraper), customized to index data in [Typesense](https://typesense.org).
 
-You'd typically setup this scraper to run on your documentation site, and then use [typesense-docsearch.js](https://github.com/typesense/typesense-docsearch.js) to add a search bar to your site. 
+You'd typically setup this scraper to run on your documentation site, and then use [typesense-docsearch.js](https://github.com/typesense/typesense-docsearch.js) to add a search bar to your site.
 
-#### What is Typesense? 
+#### What is Typesense?
 
-If you're new to Typesense, it is an **open source** search engine that is simple to use, run and scale, with clean APIs and documentation. 
+If you're new to Typesense, it is an **open source** search engine that is simple to use, run and scale, with clean APIs and documentation.
 
 Think of it as an open source alternative to Algolia and an easier-to-use, batteries-included alternative to ElasticSearch. Get a quick overview from [this guide](https://typesense.org/guide/).
 
