@@ -20,7 +20,7 @@ from typesense.operations import Operations
 class CustomNode(Node):
 
     def url(self):
-        return '{0}://{1}{2}'.format(self.protocol, self.host, self.path)
+        return '{0}://{1}:8108{2}'.format(self.protocol, self.host, self.path)
 
 
 class TypesenseHelper:
@@ -37,6 +37,7 @@ class TypesenseHelper:
                 'protocol': os.environ.get('TYPESENSE_PROTOCOL', None)
             }]
         })
+
         # Patch the client to use the custom node that doesn't require port in the url. We then need to reinitialize
         # all the other classes on the client with the new configuration.
         node = self.typesense_client.config.nodes[0]
@@ -137,7 +138,8 @@ class TypesenseHelper:
         transformed_record = {k: v for k, v in record.items() if v is not None}
 
         # Deprioritize wrapper links from the results and promote content matches and the actual page we're on to the top
-        split_url = transformed_record.get('url', '').replace('http://', '').split('/')
+        split_url = transformed_record.get('url_without_anchor', '').replace('http://', '').split('/')
+
         depth_rank = 10
         for idx, url_part in enumerate(split_url):
             if url_part in str(record.get('content', '')).lower().replace(' ', '_') or url_part in str(record.get('content', '')).lower().replace(' ', '-'):
@@ -149,6 +151,7 @@ class TypesenseHelper:
         # Promote introduction pages for topics and demote changelogs and migration guides
         transformed_record['item_priority'] = 0 + \
             int('Introduction' in transformed_record.get('content', '')) * 30 + \
+            transformed_record.get('weight', {}).get('level', 0) / 5 + \
             (-50 if 'changelog' in transformed_record.get('url', '') else 0) + \
             (-20 if 'migration_guides' in transformed_record.get('url', '') else 0) + \
             depth_rank

@@ -32,16 +32,16 @@ RUN apt-get update -y && apt-get install -yq \
   default-jdk
 
 # https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable for references around the latest versions
-RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 RUN echo "deb [arch=amd64]  https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
 RUN apt-get update -y && apt-get install -yq \
-  google-chrome-stable=114.0.5735.198-1  \
+  google-chrome-stable=115.0.5790.98-1   \
   unzip
-RUN wget -q https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
-RUN unzip chromedriver_linux64.zip
-RUN rm -f chromedriver_linux64.zip
+RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/115.0.5790.98/linux64/chromedriver-linux64.zip
+RUN unzip chromedriver-linux64.zip
+RUN rm -f chromedriver-linux64.zip
 
-RUN mv chromedriver /usr/bin/chromedriver
+RUN mv chromedriver-linux64 /usr/bin/chromedriver
 RUN chown root:root /usr/bin/chromedriver
 RUN chmod +x /usr/bin/chromedriver
 
